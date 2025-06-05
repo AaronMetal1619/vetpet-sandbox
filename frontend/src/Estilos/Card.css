@@ -1,0 +1,29 @@
+.custom-card {
+    width: 100%;
+    height: 380px; /* Altura fija para las tarjetas */
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .card-img-top {
+    height: 180px; /* Ajusta la imagen dentro de la tarjeta */
+    object-fit: cover; /* Mantiene la relación de aspecto y cubre el área */
+  }
+  
+  .card-body {
+    flex-grow: 1; /* Esto asegura que el cuerpo de la tarjeta ocupe el espacio restante */
+    overflow: hidden;
+  }
+  
+  .card-title {
+    font-size: 1.1rem; /* Tamaño de la fuente */
+  }
+  
+  .card-text {
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Corta el texto que no cabe */
+    white-space: nowrap;
+  }
+  
