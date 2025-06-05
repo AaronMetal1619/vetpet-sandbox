@@ -1,8 +1,20 @@
-<<<<<<< HEAD
-/vendor/
+# Archivos de entorno y logs comunes
+*.log
+*.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+
+# Node
 node_modules/
 npm-debug.log
 yarn-error.log
+
+# Composer
+/vendor/
 
 # Laravel 4 specific
 bootstrap/compiled.php
@@ -12,10 +24,11 @@ app/storage/
 public/storage
 public/hot
 
-# Laravel 5 & Lumen specific with changed public path
+# Laravel 5 & Lumen with custom public path
 public_html/storage
 public_html/hot
 
+# Claves, backups y otros temporales
 storage/*.key
 .env
 Homestead.yaml
@@ -29,20 +42,11 @@ Homestead.json
 .env.production
 .phpactor.json
 auth.json
-=======
-/node_modules
-/public/hot
-/public/storage
-/storage/*.key
-/vendor
-.env
-.env.backup
-.phpunit.result.cache
-docker-compose.override.yml
-Homestead.json
-Homestead.yaml
-npm-debug.log
-yarn-error.log
-/.idea
-/.vscode
->>>>>>> fcdcc18 (Segundo Commit Back)
+
+# Configs de editor
+*.sublime-project
+*.sublime-workspace
+.vscode/
+.idea/
+.editorconfig
+
