@@ -1,0 +1,7 @@
+{
+  "build": {
+    "nixpacks": {
+      "version": "v1.16.0"
+    }
+  }
+}
