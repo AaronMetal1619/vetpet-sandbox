@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ChatbotController;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,6 +13,13 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+Route::get('/chat', function () {
+    return view('chat');
+});
+
+Route::post('/chatbot', [ChatbotController::class, 'handle']);
+
 
 Route::get('/', function () {
     return view('welcome');
