@@ -1,61 +1,45 @@
-# Se utiliza una imagen de PHP 8.2 con apache
 FROM php:8.2-apache
 
-# Habilitar los modulos de apache
-RUN a2enmod rewrite headers
-RUN a2enmod proxy_http
+# Habilita módulos de Apache necesarios
+RUN a2enmod rewrite headers proxy_http
 
-# Instalar las extensiones de PHP necesarias
-RUN apt-get update && apt-get install -y wget gnupg git unzip zip libzip-dev libxslt-dev libpng-dev libjpeg.dev libgmp-dev libfreetype6-dev libonig-dev
+# Instala dependencias necesarias, incluyendo libpq-dev para PostgreSQL
+RUN apt-get update && apt-get install -y \
+    wget gnupg git unzip zip \
+    libzip-dev libxslt-dev libpng-dev libjpeg-dev \
+    libgmp-dev libfreetype6-dev libonig-dev \
+    libpq-dev  # ← NECESARIO para pdo_pgsql
 
-#Instalar dependecias de PHP
+# Configura e instala extensiones PHP necesarias, solo pdo_pgsql
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
- && docker-php-ext-install gd\
- && docker-php-ext-install bcmath gmp zip xsl gd pdo_mysql mbstring zip exif
+ && docker-php-ext-install \
+    gd bcmath gmp zip xsl mbstring exif \
+    pdo_pgsql  # ← Solo PostgreSQL
 
-# Instalar Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --version=2.3.10
-
-# Habilitar composer allow superuser
+# Instala Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Copiar nuestras llaves SSH del directorio de ssh al contenedor
-COPY id_rsa /root/.ssh/id_rsa
-COPY id_rsa.pub /root/.ssh/id_rsa.pub 
-
-# Configurar permisos y SSH
-RUN chmod 600 /root/.ssh/id_rsa \
- && chmod 644 /root/.ssh/id_rsa.pub \
- && mkdir -p /root/.ssh \
- && ssh-keyscan github.com >> /root/.ssh/known_hosts
-
-# Clonar directamente la rama deseada
-RUN git clone --branch Miguel git@github.com:MiguelAngelMartinPuga/Backend.git /var/www/Backend
-
-# Establecer directorio de trabajo
+# Copia tu código al contenedor y establece el directorio de trabajo
+COPY . /var/www/Backend
 WORKDIR /var/www/Backend
 
-# Instalar dependencias de Composer
+# Instala dependencias de Laravel
 RUN composer install --no-interaction --optimize-autoloader
 
-#Configurar laravel.conf para Apache
+# Ajusta permisos (opcional pero recomendable)
+RUN chown -R www-data:www-data /var/www/Backend/storage /var/www/Backend/bootstrap/cache
+
+# Configura Apache para Laravel
 COPY laravel.conf /etc/apache2/sites-available/laravel.conf
+RUN a2dissite 000-default.conf && a2ensite laravel.conf
 
-#Habilitar el sitio de laravel
-RUN a2ensite laravel.conf
-
-# Install Xdebug 3.3.2
-RUN pecl install xdebug-3.3.2 \
-    && docker-php-ext-enable xdebug
-
-# Configure Xdebug
+# Instala y configura Xdebug (opcional, solo si haces debug local)
+RUN pecl install xdebug-3.3.2 && docker-php-ext-enable xdebug
 RUN echo 'xdebug.mode=debug' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo 'xdebug.client_host=host.docker.internal' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo 'xdebug.client_port=9003' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo 'xdebug.start_with_request=yes' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+ && echo 'xdebug.client_host=host.docker.internal' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+ && echo 'xdebug.client_port=9003' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+ && echo 'xdebug.start_with_request=yes' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
-#Exportar el puerto y usar 80
 EXPOSE 80
-
-# Ejecutar el comando de inicio de apache
 CMD ["apache2-foreground"]
