@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: Henlo
+    env: docker
+    dockerfilePath: Dockerfile
+    plan: starter
+    port: 80
