@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'paths' => ['api/*'], // Habilita para las rutas API
+    'paths' => ['api/*','sanctum/csrf-cookie'], // Habilita para las rutas API
 
     'allowed_origins' => ['https://vetpetfront.onrender.com'],  // Permite todos los métodos (GET, POST, PUT, DELETE, etc.)
 
