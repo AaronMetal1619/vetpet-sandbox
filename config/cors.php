@@ -3,7 +3,7 @@
 return [
     'paths' => ['api/*'], // Habilita para las rutas API
 
-    'allowed_origins' => ['http://localhost:5173'],  // Permite todos los métodos (GET, POST, PUT, DELETE, etc.)
+    'allowed_origins' => ['https://vetpetfront.onrender.com'],  // Permite todos los métodos (GET, POST, PUT, DELETE, etc.)
 
     'allowed_origins' => ['*'], // Permite todos los orígenes (si es solo para desarrollo)
 
@@ -12,7 +12,7 @@ return [
     'allowed_headers' => ['*'], // Permite todos los encabezados
 
     'exposed_headers' => [],
-    
+
     'max_age' => 0,
 
     'supports_credentials' => true,

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: Henlo
+    name: VetPet
     env: docker
     dockerfilePath: Dockerfile
     plan: starter
