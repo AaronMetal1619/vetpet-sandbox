@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <title>Chatbot</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
@@ -41,3 +42,4 @@
     </script>
 </body>
 </html>
+
