@@ -10,27 +10,32 @@ class ChatbotController extends Controller
 {
     public function handle(Request $request)
     {
-        // Paso 1: Obtener y normalizar la pregunta
         $userQuestion = $this->normalizeText($request->input('message'));
-
         Log::info('Pregunta normalizada: ' . $userQuestion);
 
-        // Paso 2: Normalizar también las preguntas de la BD y buscar coincidencia
-        $match = ChatbotQuestion::get()->first(function ($item) use ($userQuestion) {
-            return $this->normalizeText($item->question) === $userQuestion;
-        });
+        $questions = ChatbotQuestion::all();
+        $bestMatch = null;
+        $highestSimilarity = 0;
 
-        Log::info('Resultado encontrado:', ['respuesta' => optional($match)->answer]);
+        foreach ($questions as $question) {
+            $normalized = $this->normalizeText($question->question);
+            similar_text($userQuestion, $normalized, $percent);
 
-        // Paso 3: Responder
-        if ($match) {
-            return response()->json(['response' => $match->answer]);
+            if ($percent > $highestSimilarity) {
+                $highestSimilarity = $percent;
+                $bestMatch = $question;
+            }
+        }
+
+        Log::info('Similitud máxima encontrada: ' . $highestSimilarity . '%');
+
+        if ($bestMatch && $highestSimilarity >= 70) {
+            return response()->json(['response' => $bestMatch->answer]);
         } else {
-            return response()->json(['response' => 'Lo siento, no tengo una respuesta para eso.']);
+            return response()->json(['response' => 'Lo siento, no entendí la pregunta. ¿Puedes reformularla?']);
         }
     }
 
-    // Función para normalizar texto (elimina acentos, signos y espacios extra)
     private function normalizeText($text)
     {
         $text = strtolower(trim($text));
