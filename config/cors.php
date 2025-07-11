@@ -2,9 +2,6 @@
 
 return [
     'paths' => ['api/*','sanctum/csrf-cookie'], // Habilita para las rutas API
-
-    'allowed_origins' => ['https://vetpetfront.onrender.com'],  // Permite todos los métodos (GET, POST, PUT, DELETE, etc.)
-
     'allowed_methods' => ['*'], //los métodos permitidos (cambio por  Aaron)
     'allowed_origins' => ['*'], // Permite todos los orígenes (si es solo para desarrollo)
 
