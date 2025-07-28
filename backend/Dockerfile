@@ -1,35 +1,38 @@
 FROM php:8.2-apache
 
-# Habilitar módulos de Apache
+# 1. Habilitar módulos de Apache
 RUN a2enmod rewrite headers proxy_http
 
-# Instalar extensiones necesarias + PostgreSQL
+# 2. Instalar dependencias del sistema y extensiones PHP
 RUN apt-get update && apt-get install -y \
-    wget gnupg git unzip zip \
-    libzip-dev libxslt-dev libpng-dev libjpeg-dev \
-    libgmp-dev libfreetype6-dev libonig-dev libpq-dev \
+    wget git unzip libzip-dev libpq-dev libpng-dev libjpeg-dev libfreetype6-dev \
+    libgmp-dev libxslt-dev libonig-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd bcmath gmp zip xsl mbstring exif pdo_pgsql
 
-# Instalar Composer globalmente
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# 3. Instalar Composer (optimizado)
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+    && chmod +x /usr/local/bin/composer
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Copiar código Laravel al contenedor
-COPY . /var/www/html
+# 4. Copiar solo los archivos necesarios para composer primero
+COPY composer.json composer.lock artisan /var/www/html/
+
+# 5. Instalar dependencias (capa separada para cache)
 WORKDIR /var/www/html
+RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Instalar dependencias de Laravel
-RUN composer install --no-interaction --optimize-autoloader
+# 6. Copiar el resto del código
+COPY . /var/www/html/
 
-# Asignar permisos a carpetas necesarias
-RUN chown -R www-data:www-data storage bootstrap/cache
+# 7. Configurar permisos (optimizado)
+RUN chown -R www-data:www-data /var/www/html/storage \
+    && chmod -R 775 /var/www/html/storage bootstrap/cache
 
-# Configurar Apache para Laravel
-COPY laravel.conf /etc/apache2/sites-available/laravel.conf
-RUN a2dissite 000-default.conf && a2ensite laravel.conf
+# 8. Configurar Apache para Laravel
+COPY laravel.conf /etc/apache2/sites-available/000-default.conf
 
-# Instalar y configurar Xdebug
+# 9. Instalar y configurar Xdebug (como lo tenías)
 RUN pecl install xdebug-3.3.2 && docker-php-ext-enable xdebug
 RUN echo 'xdebug.mode=debug' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
  && echo 'xdebug.client_host=host.docker.internal' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
