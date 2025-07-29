@@ -26,13 +26,14 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
 
-  frontend:
-    build: C:/Users/Aaron/OneDrive/Documentos/GitHub/vetpet-main-front  # ← Ruta absoluta al frontend
+    frontend:
+    build: ./frontend
     container_name: react_app
     ports:
-      - "3000:80"  # Mapea el puerto 80 de Nginx al 3000 local
+      - "3000:80"
     volumes:
-      - C:/Users/Aaron/OneDrive/Documentos/GitHub/vetpet-main-front:/app  # Opcional: para desarrollo con hot-reload
-
+      - ./frontend:/app   # Solo si quieres hot reload
+    depends_on:
+      - backend
 volumes:
   dbdata:
