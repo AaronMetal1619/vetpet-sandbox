@@ -1,0 +1,84 @@
+{
+  "name": "chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatbot",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "d66dfbbf-9664-40c3-b9d7-718c567732c8",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        416,
+        -112
+      ],
+      "webhookId": "5f36f4e5-e581-408e-af67-50fbb5acea92"
+    },
+    {
+      "parameters": {
+        "functionCode": "const question = $json.body?.message?.toLowerCase() || \"\";\n\nconst responses = {\n  \"horario\": \"Nuestro horario es de lunes a s\u00e1bado, de 9:00 a.m. a 7:00 p.m.\",\n  \"urgencias\": \"S\u00ed, contamos con atenci\u00f3n a urgencias las 24 horas.\",\n  \"ubicados\": \"Nuestra cl\u00ednica se encuentra en Av. Principal 123, Colonia Centro.\",\n  \"servicios\": \"Ofrecemos consultas, vacunaci\u00f3n, desparasitaci\u00f3n, cirug\u00edas, est\u00e9tica y tienda de mascotas.\",\n  \"esterilizaciones\": \"S\u00ed, realizamos esterilizaciones con previa cita.\",\n  \"gatos\": \"S\u00ed, atendemos tanto a gatos como a perros.\",\n  \"perros\": \"S\u00ed, atendemos tanto a gatos como a perros.\",\n  \"alimento\": \"S\u00ed, contamos con una tienda donde vendemos alimento y productos veterinarios.\",\n  \"agendar\": \"Puedes agendar tu cita llamando al 555-123-4567 o por WhatsApp.\",\n  \"consulta\": \"El costo de la consulta general es de $300 MXN.\",\n  \"tarjeta\": \"S\u00ed, aceptamos pagos en efectivo, tarjeta de cr\u00e9dito y d\u00e9bito.\"\n};\n\nlet answer = \"Lo siento, no entend\u00ed tu pregunta. \u00bfPuedes reformularla?\";\n\nfor (const keyword in responses) {\n  if (question.includes(keyword)) {\n    answer = responses[keyword];\n    break;\n  }\n}\n\nreturn [\n  {\n    json: {\n      answer\n    }\n  }\n];"
+      },
+      "id": "d3533296-8e66-49fc-8d83-a7cfaf626753",
+      "name": "Responder Preguntas",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        688,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "responseMode": "lastNode",
+        "responseData": "firstEntryJson",
+        "options": {}
+      },
+      "id": "e185650c-a797-4fdf-b51e-678d1065948f",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        928,
+        -112
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Responder Preguntas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder Preguntas": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6b309193-bb27-4a56-bd5b-17f1608aa1fd",
+  "meta": {
+    "instanceId": "5366ba9f89edc7841aba01ef73fcec95afde33c6ace8a8c3b365e24d72c4d007"
+  },
+  "id": "wmK9UCMJuE0oEsI7",
+  "tags": []
+}
