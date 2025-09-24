@@ -1,5 +1,3 @@
-version: '3.8'  # Aunque sea obsoleto, no afecta funcionalidad
-
 services:
   backend:
     build: ./backend
