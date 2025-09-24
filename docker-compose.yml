@@ -25,14 +25,15 @@ services:
       - dbdata:/var/lib/mysql
 
   frontend:
-    build: ./frontend
-    container_name: react_app
-    ports:
-      - "3000:80"
-    volumes:
-      - ./frontend:/app   # Solo si quieres hot reload
-    depends_on:
-      - backend
+  build: ../vetpet-main-front
+  container_name: react_app
+  ports:
+    - "3000:80"
+  volumes:
+    - ../vetpet-main-front:/app
+  depends_on:
+    - backend
+
 
 volumes:
   dbdata:
