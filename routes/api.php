@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PerfilController;
+use Laravel\Socialite\Facades\Socialite;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -38,4 +41,25 @@ Route::middleware('auth:sanctum')->group(function () {
      // Rutas para actualizar el perfil del usuario
     Route::post('/update-profile/{id}', [PerfilController::class, 'update']);
 
+});
+
+Route::get('/auth/{provider}/redirect', function ($provider) {
+    return Socialite::driver($provider)->stateless()->redirect();
+});
+
+Route::get('/auth/{provider}/callback', function ($provider) {
+    $socialUser = Socialite::driver($provider)->stateless()->user();
+
+    $user = User::updateOrCreate(
+        ['email' => $socialUser->getEmail()],
+        [
+            'name' => $socialUser->getName(),
+            'email' => $socialUser->getEmail(),
+            'password' => bcrypt(str()->random(16)), // contraseña dummy
+        ]
+    );
+
+    $token = $user->createToken('authToken')->plainTextToken;
+
+    return redirect("https://vetpet-sandbox-1.onrender.com/social-login-success?token=$token");
 });
