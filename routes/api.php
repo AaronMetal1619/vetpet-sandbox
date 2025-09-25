@@ -61,5 +61,5 @@ Route::get('/auth/{provider}/callback', function ($provider) {
 
     $token = $user->createToken('authToken')->plainTextToken;
 
-    return redirect("https://vetpet-sandbox-1.onrender.com/social-login-success?token=$token");
+    return redirect("https://vetpetfront.onrender.com/social-login-success?token=$token");
 });
