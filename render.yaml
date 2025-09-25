@@ -32,3 +32,4 @@ services:
           name: VetPetBD
           type: pserv
           property: password
+    postDeployCommand: "php artisan migrate --force"
