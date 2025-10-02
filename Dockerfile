@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # 4. Copiar solo los archivos esenciales primero (optimiza caché)
-COPY composer.json composer.lock artisan ./
+COPY composer.json composer.lock  ./
 
 # 5. Instalar dependencias sin dev ni scripts pesados
 RUN composer install --no-interaction --no-dev --no-scripts --optimize-autoloader
