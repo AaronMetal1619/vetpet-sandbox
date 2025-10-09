@@ -20,6 +20,10 @@ COPY composer.json composer.lock  ./
 
 # 5. Instalar dependencias sin dev ni scripts pesados
 RUN composer install --no-interaction --no-dev --no-scripts --optimize-autoloader
+RUN composer require laravel/socialite && \
+    php artisan config:clear && \
+    php artisan cache:clear
+
 
 # 6. Copiar el resto de la aplicación
 COPY . .
