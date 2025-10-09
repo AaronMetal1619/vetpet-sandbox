@@ -21,6 +21,9 @@ COPY composer.json composer.lock  ./
 # 5. Instala dependencias base sin ejecutar scripts
 RUN composer install --no-interaction --no-dev --no-scripts --optimize-autoloader
 
+# 6. Copiar el resto de la aplicación
+COPY . .
+
 # 5.1 Instala Socialite sin ejecutar scripts
 RUN composer require laravel/socialite --no-scripts
 
@@ -31,10 +34,6 @@ RUN composer dump-autoload && \
     php artisan cache:clear && \
     php artisan route:clear && \
     php artisan view:clear
-
-
-# 6. Copiar el resto de la aplicación
-COPY . .
 
 # 7. Ejecutar scripts de instalación de Laravel
 RUN composer run-script post-autoload-dump || true
