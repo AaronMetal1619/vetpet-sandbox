@@ -18,8 +18,20 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # 4. Copiar solo los archivos esenciales primero (optimiza caché)
 COPY composer.json composer.lock  ./
 
-# 5. Instalar dependencias sin dev ni scripts pesados
+# 5. Instala dependencias base sin ejecutar scripts
 RUN composer install --no-interaction --no-dev --no-scripts --optimize-autoloader
+
+# 5.1 Instala Socialite sin ejecutar scripts
+RUN composer require laravel/socialite --no-scripts
+
+# 5.2 Ahora ejecuta los scripts y limpia cachés una vez que todo está instalado
+RUN composer dump-autoload && \
+    php artisan package:discover --ansi || true && \
+    php artisan config:clear && \
+    php artisan cache:clear && \
+    php artisan route:clear && \
+    php artisan view:clear
+
 
 # 6. Copiar el resto de la aplicación
 COPY . .
