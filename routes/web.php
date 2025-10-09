@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\auth\SocialiteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+Route::get('/auth/facebook/redirect', [SocialiteController::class, 'redirectToFacebook']);
+Route::get('/auth/facebook/callback', [SocialiteController::class, 'handleFacebookCallback']);
 
 Route::get('/', function () {
     return view('welcome');
