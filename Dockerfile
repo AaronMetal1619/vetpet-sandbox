@@ -19,7 +19,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 COPY composer.json composer.lock  ./
 
 # 5. Instalar dependencias sin dev ni scripts pesados
-RUN composer install --no-interaction --no-dev --no-scripts --optimize-autoloader | composer require laravel/socialite
+RUN composer install --no-interaction --no-dev --no-scripts --optimize-autoloader
     
 
 
