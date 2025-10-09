@@ -22,10 +22,7 @@ COPY composer.json composer.lock  ./
 RUN composer install --no-interaction --no-dev --no-scripts --optimize-autoloader
 
 # 5.5 instalar otras dependencias necesarias
-RUN composer require laravel/socialite && \
-    php artisan config:clear && \
-    php artisan cache:clear
-
+RUN composer require laravel/socialite
 
 
 # 6. Copiar el resto de la aplicación
