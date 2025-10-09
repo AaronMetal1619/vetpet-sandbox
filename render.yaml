@@ -34,11 +34,3 @@ services:
           property: password
           
     postDeployCommand: "php artisan migrate --force"
-
-    buildCommand: |
-      composer install --no-dev --optimize-autoloader
-      composer require laravel/socialite
-      php artisan config:clear
-      php artisan cache:clear
-      php artisan route:clear
-      php artisan view:clear
