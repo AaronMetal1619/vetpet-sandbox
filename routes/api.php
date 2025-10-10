@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\SocialiteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductoController;
@@ -63,3 +64,7 @@ Route::get('/auth/{provider}/callback', function ($provider) {
 
     return redirect("https://vetpetfront.onrender.com/social-login-success?token=$token");
 });
+
+
+Route::get('/auth/facebook/redirect', [SocialiteController::class, 'redirectToFacebook']);
+Route::get('/auth/facebook/callback', [SocialiteController::class, 'handleFacebookCallback']);

@@ -1,50 +1,60 @@
 <?php
-
-namespace App\Http\Controllers\auth;
+namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\auth;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Exception;
 
 class SocialiteController extends Controller
 {
-    // Redirige a Facebook
     public function redirectToFacebook()
     {
-        return Socialite::driver('facebook')->redirect();
+        // solicitar email explícitamente
+        return Socialite::driver('facebook')->scopes(['email'])->stateless()->redirect();
     }
 
-    // Callback de Facebook
     public function handleFacebookCallback()
     {
         try {
-            $facebookUser = Socialite::driver('facebook')->user();
+            $fbUser = Socialite::driver('facebook')->stateless()->user();
 
-            // Buscar si ya existe
-            $user = User::where('facebook_id', $facebookUser->id)
-                ->orWhere('email', $facebookUser->email)
-                ->first();
-
-            if (!$user) {
-                // Crear usuario si no existe
-                $user = User::create([
-                    'name' => $facebookUser->name,
-                    'email' => $facebookUser->email,
-                    'facebook_id' => $facebookUser->id,
-                    'password' => bcrypt(str()->random(16)), // clave aleatoria
-                ]);
+            // Si no hay email, falla (Facebook puede no devolverlo)
+            $email = $fbUser->getEmail();
+            if (!$email) {
+                return redirect('https://vetpetfront.onrender.com/login?error=NoEmailFromFacebook');
             }
 
-            // Autenticar al usuario
-            Auth::login($user);
+            // Buscar por facebook_id o por email
+            $user = User::where('facebook_id', $fbUser->getId())
+                        ->orWhere('email', $email)
+                        ->first();
 
-            // Redirigir donde quieras (por ejemplo, al dashboard)
-            return redirect('/dashboard');
+            if (!$user) {
+                $user = User::create([
+                    'name' => $fbUser->getName() ?? $email,
+                    'email' => $email,
+                    'facebook_id' => $fbUser->getId(),
+                    'password' => bcrypt(str()->random(24)),
+                ]);
+            } else {
+                // si encontró por email pero no tiene facebook_id, lo actualizamos
+                if (!$user->facebook_id) {
+                    $user->facebook_id = $fbUser->getId();
+                    $user->save();
+                }
+            }
+
+            // Crear token y devolver al frontend (puedes redirigir)
+            $token = $user->createToken('authToken')->plainTextToken;
+
+            // Redirige a tu frontend con el token en query (o guarda sesión)
+            return redirect("https://vetpetfront.onrender.com/social-login-success?token={$token}");
 
         } catch (Exception $e) {
-            return redirect('/login')->with('error', 'Error al autenticar con Facebook');
+            \Log::error('FB login error: '.$e->getMessage());
+            return redirect('https://vetpetfront.onrender.com/login?error=facebook_failed');
         }
     }
 }
