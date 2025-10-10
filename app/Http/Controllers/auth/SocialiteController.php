@@ -57,4 +57,58 @@ class SocialiteController extends Controller
             return redirect('https://vetpetfront.onrender.com/login?error=facebook_failed');
         }
     }
+    // Nuevas funciones para Google
+    public function redirectToGoogle()
+    {
+        // pedimos profile y email
+        return Socialite::driver('google')
+                        ->scopes(['openid','profile','email'])
+                        ->stateless()
+                        ->redirect();
+    }
+
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->stateless()->user();
+            $email = $googleUser->getEmail();
+            $googleId = $googleUser->getId();
+
+            if (!$email) {
+                // No email from Google — manejar como error
+                return redirect('https://vetpetfront.onrender.com/login?error=no_email');
+            }
+
+            // Buscar por google_id o por email
+            $user = User::where('google_id', $googleId)
+                        ->orWhere('email', $email)
+                        ->first();
+
+            if (!$user) {
+                $user = User::create([
+                    'name' => $googleUser->getName() ?? $email,
+                    'email' => $email,
+                    'google_id' => $googleId,
+                    'password' => bcrypt(str()->random(24)),
+                ]);
+            } else {
+                // Si se encontró por email pero no tiene google_id, lo registramos
+                if (!$user->google_id) {
+                    $user->google_id = $googleId;
+                    $user->save();
+                }
+            }
+
+            // Crear token (sanctum/personal token)
+            $token = $user->createToken('authToken')->plainTextToken;
+
+            // Redirigir al frontend con token (o puedes responder JSON)
+            return redirect("https://vetpetfront.onrender.com/social-login-success?token={$token}");
+
+        } catch (Exception $e) {
+            \Log::error('Google login error: '.$e->getMessage());
+            return redirect('https://vetpetfront.onrender.com/login?error=google_failed');
+        }
+    }
+
 }

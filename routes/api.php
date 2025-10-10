@@ -65,6 +65,8 @@ Route::get('/auth/{provider}/callback', function ($provider) {
     return redirect("https://vetpetfront.onrender.com/social-login-success?token=$token");
 });
 
-
+//aqui estan las nuevas rutas para facebook y google
 Route::get('/auth/facebook/redirect', [SocialiteController::class, 'redirectToFacebook']);
 Route::get('/auth/facebook/callback', [SocialiteController::class, 'handleFacebookCallback']);
+Route::get('/auth/google/redirect', [SocialiteController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [SocialiteController::class, 'handleGoogleCallback']);
