@@ -5,6 +5,8 @@ services:
     plan: free
     autoDeploy: true
     dockerfilePath: ./Dockerfile
+  - name     : laravel/socialite
+    version  : v5.23.0
     envVars:
       - key: APP_KEY
         sync: false
