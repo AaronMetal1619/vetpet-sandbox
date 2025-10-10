@@ -60,13 +60,13 @@ class SocialiteController extends Controller
     }
     // Nuevas funciones para Google
     public function redirectToGoogle()
-    {
+        {
         // pedimos profile y email
         return Socialite::driver('google')
                         ->scopes(['openid','profile','email'])
                         ->stateless()
                         ->redirect();
-    }
+        }
 
     public function handleGoogleCallback()
     {
