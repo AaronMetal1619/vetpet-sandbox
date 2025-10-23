@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\SocialiteController;
+use App\Http\Controllers\Auth\FirebaseAuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductoController;
@@ -64,6 +65,8 @@ Route::get('/auth/{provider}/callback', function ($provider) {
 
     return redirect("https://vetpetfront.onrender.com/social-login-success?token=$token");
 });
+// rutas de mi querido amigo firebase
+Route::post('/auth/firebase', [FirebaseAuthController::class, 'handle']);
 
 //aqui estan las nuevas rutas para facebook y google
 Route::get('/auth/facebook/redirect', [SocialiteController::class, 'redirectToFacebook']);

@@ -24,6 +24,7 @@ class User extends Authenticatable
         'role',
         'facebook_id',
         'google_id',
+        'firebase_uid',
         'photo'
     ];
 
