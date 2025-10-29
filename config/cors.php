@@ -1,11 +1,10 @@
 <?php
 
 return [
-    'paths' => ['api/*'], // Habilita para las rutas API
+    'paths' => ['api/*',"sanctum/csrf-cookie"], // Habilita para las rutas API
+    'allowed_methods' => ['*'],
+    'allowed_origins' => ['*'],  // Permite todos los métodos (GET, POST, PUT, DELETE, etc.)
 
-    'allowed_origins' => ['http://localhost:5173'],  // Permite todos los métodos (GET, POST, PUT, DELETE, etc.)
-
-    'allowed_origins' => ['*'], // Permite todos los orígenes (si es solo para desarrollo)
 
     'allowed_origins_patterns' => [],
 
@@ -15,5 +14,5 @@ return [
     
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    'supports_credentials' => false,
 ];
