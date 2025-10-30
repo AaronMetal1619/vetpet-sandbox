@@ -45,4 +45,4 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 EXPOSE 10000
 
 # Iniciar servidor Laravel
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=$PORT"]
+CMD bash -c "php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"
