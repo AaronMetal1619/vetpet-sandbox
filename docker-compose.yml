@@ -1,8 +1,8 @@
-version: '3.8'
-
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./
+      dockerfile: Dockerfile
     container_name: laravel_app
     ports:
       - "8000:80"
@@ -16,7 +16,6 @@ services:
   db:
     image: mysql:8.0
     container_name: mysql_db
-    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: laravel
@@ -28,12 +27,16 @@ services:
       - dbdata:/var/lib/mysql
 
   frontend:
-    build: ./frontend
+    build:
+      context: ../vetpet-main-front
+      dockerfile: Dockerfile
     container_name: react_app
     ports:
-      - "3000:3000"
-    stdin_open: true
-    tty: true
+      - "3000:80"
+    volumes:
+      - ../vetpet-main-front:/app
+    depends_on:
+      - backend
 
 volumes:
   dbdata:

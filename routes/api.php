@@ -1,10 +1,15 @@
 <?php
 
+use App\Http\Controllers\Auth\SocialiteController;
+use App\Http\Controllers\Auth\FirebaseAuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PerfilController;
+use Laravel\Socialite\Facades\Socialite;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -39,3 +44,32 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/update-profile/{id}', [PerfilController::class, 'update']);
 
 });
+
+Route::get('/auth/{provider}/redirect', function ($provider) {
+    return Socialite::driver($provider)->stateless()->redirect();
+});
+
+Route::get('/auth/{provider}/callback', function ($provider) {
+    $socialUser = Socialite::driver($provider)->stateless()->user();
+
+    $user = User::updateOrCreate(
+        ['email' => $socialUser->getEmail()],
+        [
+            'name' => $socialUser->getName(),
+            'email' => $socialUser->getEmail(),
+            'password' => bcrypt(str()->random(16)), // contraseña dummy
+        ]
+    );
+
+    $token = $user->createToken('authToken')->plainTextToken;
+
+    return redirect("https://vetpetfront.onrender.com/social-login-success?token=$token");
+});
+// rutas de mi querido amigo firebase
+Route::post('/auth/firebase', [FirebaseAuthController::class, 'handle']);
+
+//aqui estan las nuevas rutas para facebook y google
+Route::get('/auth/facebook/redirect', [SocialiteController::class, 'redirectToFacebook']);
+Route::get('/auth/facebook/callback', [SocialiteController::class, 'handleFacebookCallback']);
+Route::get('/auth/google/redirect', [SocialiteController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [SocialiteController::class, 'handleGoogleCallback']);
