@@ -1,17 +1,30 @@
 <?php
 
 return [
-    'paths' => ['api/*','sanctum/csrf-cookie'], // Habilita para las rutas API
-    'allowed_methods' => ['*'], //los métodos permitidos (cambio por  Aaron)
-    'allowed_origins' => ['*'], // Permite todos los orígenes (si es solo para desarrollo)
+
+    'paths' => [
+        'api/*',
+        'sanctum/csrf-cookie',
+        'webhook/*',
+    ],
+
+    'allowed_methods' => ['*'],
+
+    'allowed_origins' => [
+        'http://localhost:3000',
+        'http://localhost:5678',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:5678',
+        '*', // si NO quieres permitir todo, puedo quitarte esta línea
+    ],
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'], // Permite todos los encabezados
+    'allowed_headers' => ['*'],
 
     'exposed_headers' => [],
 
     'max_age' => 0,
 
-    'supports_credentials' => false, // Permite el uso de credenciales (cookies, autenticación HTTP básica, etc.), pero lo quitare
+    'supports_credentials' => true,
 ];
