@@ -15,7 +15,10 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'partner_type',
+        'partner_type',   // viene de tu rama
+        'facebook_id',    // viene de la otra rama
+        'google_id',      // viene de la otra rama
+        'firebase_uid',   // viene de la otra rama
         'photo'
     ];
 

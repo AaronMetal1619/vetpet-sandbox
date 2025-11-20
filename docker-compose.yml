@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./        # raíz del backend
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html
+    environment:
+      APACHE_DOCUMENT_ROOT: /var/www/html/public
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravel
+    ports:
+      - "3307:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  frontend:
+    build:
+      context: ../vetpet-main-front     # ruta hacia tu front
+      dockerfile: Dockerfile            # Dockerfile del front
+    container_name: react_app
+    ports:
+      - "3000:80"
+    volumes:
+      - ../vetpet-main-front:/app
+    depends_on:
+      - backend
+
+volumes:
+  dbdata:

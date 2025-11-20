@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: vetpet-sandbox-backend
+    env: docker
+    plan: free
+    autoDeploy: true
+    dockerfilePath: ./Dockerfile
+  - name     : laravel/socialite
+    version  : v5.23.0
+    envVars:
+      - key: APP_KEY
+        sync: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromService:
+          name: VetPetBD
+          type: pserv
+          property: host
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        fromService:
+          name: VetPetBD
+          type: pserv
+          property: database
+      - key: DB_USERNAME
+        fromService:
+          name: VetPetBD
+          type: pserv
+          property: user
+      - key: DB_PASSWORD
+        fromService:
+          name: VetPetBD
+          type: pserv
+          property: password
+          
+    postDeployCommand: "php artisan migrate --force"

@@ -1,44 +1,95 @@
 <?php
 
+use App\Http\Controllers\Auth\SocialiteController;
+use App\Http\Controllers\Auth\FirebaseAuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\CitaController;
+use Laravel\Socialite\Facades\Socialite;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
+
+//
+// 📌 Rutas públicas
+//
+
 // Registro y login
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
-// Rutas públicas de productos (si quieres que se puedan ver sin login)
+// Productos visibles sin login
 Route::get('/productos', [ProductoController::class, 'index']);
 
-// Crear cita desde el chatbot o cliente
+// Crear cita (desde chatbot o cliente)
 Route::post('/citas', [CitaController::class, 'store']);
 
-
-// =========================================================
-// 🔒 Rutas protegidas con autenticación
-// =========================================================
+//
+// 🔒 Rutas protegidas por Sanctum
+//
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Cerrar sesión y ver perfil actual
+    // Sesión y perfil
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 
-    // Actualizar perfil del usuario autenticado
+    // Actualizar perfil
     Route::post('/update-profile/{id}', [PerfilController::class, 'update']);
 
-    // CRUD de productos (solo para usuarios autenticados)
+    // CRUD productos para usuarios autenticados
     Route::post('/productos', [ProductoController::class, 'store']);
     Route::put('/productos/{id}', [ProductoController::class, 'update']);
     Route::delete('/productos/{id}', [ProductoController::class, 'destroy']);
 
-    // =====================================================
-    // 🛠️ Rutas solo para administradores
-    // =====================================================
+    //
+    // 👑 Rutas solo para administradores
+    //
     Route::middleware('role:admin')->group(function () {
-        Route::post('/admin/create-user', [AuthController::class, 'createUser']); // Crear usuarios desde el panel
-        // Puedes agregar aquí más rutas exclusivas del panel admin
+        Route::post('/admin/create-user', [AuthController::class, 'createUser']);
     });
 });
+
+//
+// 🌐 Socialite Login (Facebook / Google)
+//
+Route::get('/auth/{provider}/redirect', function ($provider) {
+    return Socialite::driver($provider)->stateless()->redirect();
+});
+
+Route::get('/auth/{provider}/callback', function ($provider) {
+    $socialUser = Socialite::driver($provider)->stateless()->user();
+
+    $user = User::updateOrCreate(
+        ['email' => $socialUser->getEmail()],
+        [
+            'name' => $socialUser->getName(),
+            'email' => $socialUser->getEmail(),
+            'password' => bcrypt(str()->random(16)),
+        ]
+    );
+
+    $token = $user->createToken('authToken')->plainTextToken;
+
+    return redirect("https://vetpetfront.onrender.com/social-login-success?token=$token");
+});
+
+//
+// 🔐 Firebase login
+//
+Route::post('/auth/firebase', [FirebaseAuthController::class, 'handle']);
+
+//
+// 🌐 Rutas personalizadas de SocialiteController
+//
+Route::get('/auth/facebook/redirect', [SocialiteController::class, 'redirectToFacebook']);
+Route::get('/auth/facebook/callback', [SocialiteController::class, 'handleFacebookCallback']);
+Route::get('/auth/google/redirect', [SocialiteController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [SocialiteController::class, 'handleGoogleCallback']);
