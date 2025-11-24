@@ -1,7 +1,4 @@
-FROM php:8.3-apache
-
-# Habilitar mod_rewrite y headers
-RUN a2enmod rewrite headers
+FROM php:8.3-fpm
 
 # Configurar DocumentRoot para Laravel
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
