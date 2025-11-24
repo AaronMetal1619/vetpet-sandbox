@@ -11,9 +11,21 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev libgmp-dev libxslt-dev libonig-dev \
     git curl zip unzip libpng-dev libonig-dev libxml2-dev libzip-dev libpq-dev libjpeg-dev libfreetype6-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd bcmath gmp zip xsl mbstring exif pdo pdo_pgsql
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-install \
+        pdo \
+        pdo_mysql \
+        pdo_pgsql \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+        zip \
+        gmp \
+        xsl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 
 # 🔥 Aseguramos instalación de extensiones PDO antes de Composer
 RUN docker-php-ext-enable pdo pdo_pgsql
