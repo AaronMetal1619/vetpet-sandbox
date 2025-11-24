@@ -1,9 +1,5 @@
 FROM php:8.3-fpm
 
-# Configurar DocumentRoot para Laravel
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/000-default.conf
-
 # Instalar dependencias de sistema
 RUN apt-get update && apt-get install -y \
     git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev \
@@ -55,7 +51,7 @@ RUN echo "<IfModule mod_headers.c>\n\
     Header always set Access-Control-Allow-Origin \"*\"\n\
     Header always set Access-Control-Allow-Methods \"GET, POST, PUT, DELETE, OPTIONS\"\n\
     Header always set Access-Control-Allow-Headers \"Content-Type, Authorization, X-Requested-With\"\n\
-</IfModule>" >> /etc/apache2/apache2.conf
+</IfModule>"
 
 EXPOSE 10000
 
