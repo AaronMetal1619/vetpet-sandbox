@@ -1,5 +1,6 @@
 FROM php:8.2-fpm
 
+# Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
     git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev \
     libzip-dev libonig-dev libxml2-dev libpq-dev libgmp-dev libxslt-dev \
@@ -9,24 +10,31 @@ RUN apt-get update && apt-get install -y \
         mbstring exif pcntl bcmath gd zip xsl gmp \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copiar composer.json y composer.lock
-COPY composer.json composer.lock ./
-
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts -vvv
-
+# COPIAR PROYECTO COMPLETO ANTES DE INSTALAR DEPENDENCIAS
 COPY . .
 
+# Instalar dependencias PHP
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+
+# Permisos Laravel
 RUN mkdir -p storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
+# Optimizar Laravel
 RUN php artisan key:generate --force || true \
     && php artisan optimize || true
 
-EXPOSE 8080
+# Xdebug (opcional en Render)
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug
 
+RUN echo "xdebug.mode=off" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+
+EXPOSE 8080
 CMD php artisan serve --host=0.0.0.0 --port=8080
