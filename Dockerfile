@@ -44,6 +44,7 @@ RUN echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.
     && echo "xdebug.client_host=host.docker.internal" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo "xdebug.client_port=9003" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
-EXPOSE 10000
+EXPOSE 8080
 
-CMD ["php-fpm"]
+CMD php artisan serve --host=0.0.0.0 --port=8080
+

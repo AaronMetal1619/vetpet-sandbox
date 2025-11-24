@@ -86,6 +86,22 @@ Route::get('/auth/{provider}/callback', function ($provider) {
 //
 Route::post('/auth/firebase', [FirebaseAuthController::class, 'handle']);
 
+//rutas suscripcion falsa
+Route::post('/fake-subscribe', function (Request $request) {
+    $user = auth()->user();
+
+    $user->subscription_type = $request->plan;
+    $user->subscription_active = true;
+    $user->save();
+
+    return response()->json([
+        "message" => "Suscripción activada (modo prueba)",
+        "plan" => $request->plan
+    ]);
+});
+
+
+
 //
 // 🌐 Rutas personalizadas de SocialiteController
 //
