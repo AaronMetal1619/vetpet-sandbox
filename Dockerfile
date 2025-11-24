@@ -1,13 +1,13 @@
 FROM php:8.2-apache
 
-# Habilitar mod_rewrite
+# Habilitar mod_rewrite y headers
 RUN a2enmod rewrite headers
 
 # Configurar DocumentRoot para Laravel
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/000-default.conf
 
-# Instalar dependencias del sistema y extensiones necesarias
+# Instalar dependencias de sistema
 RUN apt-get update && apt-get install -y \
     git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev \
     libzip-dev libonig-dev libxml2-dev libpq-dev libgmp-dev libxslt-dev \
@@ -17,40 +17,43 @@ RUN apt-get update && apt-get install -y \
         mbstring exif pcntl bcmath gd zip xsl gmp \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# --- XDEBUG ---
-RUN pecl install xdebug \
-    && docker-php-ext-enable xdebug
-
-# Configuración Xdebug
-RUN echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo \"xdebug.start_with_request=yes\" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo \"xdebug.client_host=host.docker.internal\" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo \"xdebug.client_port=9003\" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
-
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copiar paquetes de Composer
+# Copiar composer.json y lock antes para cache
 COPY composer.json composer.lock ./
 
-# Instalar dependencias base
+# Instalar dependencias
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Copiar todo el proyecto
+# Copiar proyecto completo
 COPY . .
 
-# Asignar permisos
+# Permisos
 RUN mkdir -p storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Limpiar cache de Laravel y optimizar
+# Optimizar Laravel
 RUN php artisan key:generate --force || true \
     && php artisan optimize || true
 
-# --- CORS Config Apache ---
+# --------------------------
+# XDEBUG
+# --------------------------
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug
+
+RUN echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo \"xdebug.start_with_request=yes\" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo \"xdebug.client_host=host.docker.internal\" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo \"xdebug.client_port=9003\" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+
+# --------------------------
+# CORS para API (Apache level)
+# --------------------------
 RUN echo "<IfModule mod_headers.c>\n\
     Header always set Access-Control-Allow-Origin \"*\"\n\
     Header always set Access-Control-Allow-Methods \"GET, POST, PUT, DELETE, OPTIONS\"\n\
