@@ -1,6 +1,6 @@
-FROM php:8.3-fpm
+FROM php:8.2-fpm
 
-# Instalar dependencias de sistema
+# Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
     git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev \
     libzip-dev libonig-dev libxml2-dev libpq-dev libgmp-dev libxslt-dev \
@@ -15,16 +15,16 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copiar composer.json y lock antes para cache
+# Copiar solo archivos de composer para cache
 COPY composer.json composer.lock ./
 
-# Instalar dependencias
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+# Instalar dependencias PHP
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader || true
 
-# Copiar proyecto completo
+# Copiar el proyecto completo
 COPY . .
 
-# Permisos
+# Permisos Laravel
 RUN mkdir -p storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
@@ -40,19 +40,10 @@ RUN pecl install xdebug \
     && docker-php-ext-enable xdebug
 
 RUN echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo \"xdebug.start_with_request=yes\" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo \"xdebug.client_host=host.docker.internal\" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo \"xdebug.client_port=9003\" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+    && echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo "xdebug.client_host=host.docker.internal" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo "xdebug.client_port=9003" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
-# --------------------------
-# CORS para API (Apache level)
-# --------------------------
-RUN echo "<IfModule mod_headers.c>\n\
-    Header always set Access-Control-Allow-Origin \"*\"\n\
-    Header always set Access-Control-Allow-Methods \"GET, POST, PUT, DELETE, OPTIONS\"\n\
-    Header always set Access-Control-Allow-Headers \"Content-Type, Authorization, X-Requested-With\"\n\
-</IfModule>"
+EXPOSE 9000
 
-EXPOSE 10000
-
-CMD ["apache2-foreground"]
+CMD ["php-fpm"]
