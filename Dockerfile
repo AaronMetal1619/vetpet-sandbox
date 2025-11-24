@@ -1,4 +1,4 @@
-FROM php:8.3-fpm
+FROM php:8.3-apache
 
 # Habilitar mod_rewrite y headers
 RUN a2enmod rewrite headers
