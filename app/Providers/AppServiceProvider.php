@@ -3,27 +3,36 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Artisan; // <--- Importante
 use Illuminate\Support\Facades\Schema;
 
 class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
         //
     }
 
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-        Schema::defaultStringLength(191); // Evita errores con índices largos
+        // Fix para longitud de strings en MySQL viejos (común en servidores compartidos)
+        Schema::defaultStringLength(191);
+
+        // 🔥 LA SOLUCIÓN NUCLEAR 🔥
+        // Esto obliga a Laravel a borrar su caché de rutas CADA VEZ que se usa.
+        // No es lo ideal para una app gigante, pero para tu proyecto escolar en Render 
+        // es la solución perfecta para evitar estos errores 404.
+        try {
+            Artisan::call('route:clear');
+            Artisan::call('config:clear');
+        } catch (\Exception $e) {
+            // Silenciar errores si ocurren durante el boot
+        }
     }
 }
