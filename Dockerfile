@@ -15,7 +15,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# COPIAR PROYECTO COMPLETO ANTES DE INSTALAR DEPENDENCIAS
+# COPIAR PROYECTO COMPLETO
 COPY . .
 
 # Instalar dependencias PHP
@@ -26,16 +26,16 @@ RUN mkdir -p storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Optimizar Laravel
-RUN php artisan key:generate --force || true \
-    && php artisan optimize || true
+# Generar key si no existe (por seguridad en build)
+RUN php artisan key:generate --force || true
 
-# Xdebug (opcional en Render)
+# Xdebug (opcional)
 RUN pecl install xdebug \
     && docker-php-ext-enable xdebug
-
 RUN echo "xdebug.mode=off" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
 EXPOSE 8080
-# CMD php artisan serve --host=0.0.0.0 --port=8080
-CMD php artisan route:clear && php artisan config:clear && php artisan serve --host=0.0.0.0 --port=8080
+
+# 🔥 LA LÍNEA MÁGICA 🔥
+# optimize:clear borra TODAS las cachés (rutas, config, views, events) antes de iniciar
+CMD php artisan optimize:clear && php artisan serve --host=0.0.0.0 --port=8080
