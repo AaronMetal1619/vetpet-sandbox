@@ -36,6 +36,6 @@ RUN echo "xdebug.mode=off" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.in
 
 EXPOSE 8080
 
-# 🔥 LA LÍNEA MÁGICA 🔥
+
 # optimize:clear borra TODAS las cachés (rutas, config, views, events) antes de iniciar
 CMD php artisan optimize:clear && php artisan serve --host=0.0.0.0 --port=8080
