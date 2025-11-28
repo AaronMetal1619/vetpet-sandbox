@@ -37,4 +37,5 @@ RUN pecl install xdebug \
 RUN echo "xdebug.mode=off" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
 EXPOSE 8080
-CMD php artisan serve --host=0.0.0.0 --port=8080
+# CMD php artisan serve --host=0.0.0.0 --port=8080
+CMD php artisan route:clear && php artisan config:clear && php artisan serve --host=0.0.0.0 --port=8080
