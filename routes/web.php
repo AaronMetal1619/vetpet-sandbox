@@ -1,50 +1,56 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\Auth\SocialiteController;
-use Illuminate\Support\Facades\Artisan; // <--- Necesario para ejecutar comandos
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| Web Routes - HERRAMIENTA DE DIAGNÓSTICO
 |--------------------------------------------------------------------------
 */
 
-// Redirección de la raíz
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Socialite
+// Ruta Socialite y Chatbot (mantenemos lo que tenías)
 Route::get('/auth/facebook/redirect', [SocialiteController::class, 'redirectToFacebook']);
 Route::get('/auth/facebook/callback', [SocialiteController::class, 'handleFacebookCallback']);
-
-// Chatbot (si usas vistas)
-Route::get('/chat', function () {
-    return view('chat');
-});
+Route::get('/chat', function () { return view('chat'); });
 Route::post('/chatbot', [ChatbotController::class, 'handle']);
 
-// 🛠️ RUTA DE REPARACIÓN (ESTO SOLUCIONA EL ERROR 404)
-Route::get('/fix-laravel', function () {
+// 🔥 LA RUTA MAESTRA DE DIAGNÓSTICO 🔥
+Route::get('/debug-routes', function () {
     try {
-        // 1. Borrar caché de rutas (El culpable principal)
+        // 1. Forzar limpieza agresiva
         Artisan::call('route:clear');
-        
-        // 2. Borrar caché de configuración
         Artisan::call('config:clear');
+        Artisan::call('optimize:clear');
+
+        // 2. Obtener la lista de rutas que Laravel "ve" ahora mismo
+        $routes = Route::getRoutes();
+        $lista = [];
         
-        // 3. Borrar caché de aplicación
-        Artisan::call('cache:clear');
-        
-        // 4. Re-optimizar (Opcional)
-        // Artisan::call('optimize'); 
-        
-        return "<h1 style='color:green'>✅ ÉXITO: Sistema reiniciado</h1>
-                <p>Las rutas se han limpiado. Render ahora reconoce '/api/users'.</p>
-                <p>Vuelve a tu Frontend y recarga la página.</p>";
+        foreach ($routes as $route) {
+            // Solo nos interesan las rutas de API
+            if (str_contains($route->uri(), 'api')) {
+                $lista[] = [
+                    'method' => implode('|', $route->methods()),
+                    'uri'    => $route->uri(),
+                    'action' => $route->getActionName()
+                ];
+            }
+        }
+
+        return response()->json([
+            'status' => 'Caché borrada exitosamente',
+            'total_rutas_api' => count($lista),
+            'rutas_detectadas' => $lista
+        ]);
+
     } catch (\Exception $e) {
-        return "<h1 style='color:red'>❌ ERROR</h1> <p>" . $e->getMessage() . "</p>";
+        return response()->json(['error' => $e->getMessage()], 500);
     }
 });
