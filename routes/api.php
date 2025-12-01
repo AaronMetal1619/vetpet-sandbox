@@ -24,10 +24,17 @@ use App\Http\Controllers\FirebaseAuthController;
 //
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
-Route::get('/productos', [ProductoController::class, 'index']); // Ver productos es público
+
+// Productos y Citas (Crear) visibles para todos
+Route::get('/productos', [ProductoController::class, 'index']);
+Route::post('/citas', [CitaController::class, 'store']); 
+
+// 🔥 CRUCIAL: Lista de usuarios pública para que n8n pueda leer las veterinarias
+Route::get('/users', [UserController::class, 'index']); 
+
 
 //
-// 🔒 RUTAS PROTEGIDAS (Requieren Token)
+// 🔒 RUTAS PROTEGIDAS (Requieren Token - Admin/Partner/User logueado)
 //
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -36,15 +43,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/update-profile/{id}', [PerfilController::class, 'update']);
 
-    // --- GESTIÓN DE USUARIOS (VETERINARIAS / ADMIN) ---
-    Route::get('/users', [UserController::class, 'index']);       // Listar
-    Route::post('/admin/users', [UserController::class, 'store']); // Crear
+    // --- GESTIÓN DE USUARIOS (ADMINISTRACIÓN) ---
+    // Nota: GET /users ahora es pública (arriba), pero crear/editar/borrar sigue protegido
+    Route::post('/admin/users', [UserController::class, 'store']); // Crear Veterinaria
     Route::put('/users/{id}', [UserController::class, 'update']);  // Editar
     Route::delete('/users/{id}', [UserController::class, 'destroy']); // Eliminar
 
-    // --- GESTIÓN DE CITAS ---
-    Route::get('/citas', [CitaController::class, 'index']);       // Ver citas (Dashboard)
-    Route::post('/citas', [CitaController::class, 'store']);      // Crear cita
+    // --- GESTIÓN DE CITAS (DASHBOARD) ---
+    Route::get('/citas', [CitaController::class, 'index']);       // Ver lista de citas
     Route::delete('/citas/{id}', [CitaController::class, 'destroy']); // Borrar cita
 
     // --- GESTIÓN DE PRODUCTOS ---
