@@ -119,6 +119,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // ... tus otras rutas ...
     Route::post('/appointments', [AppointmentController::class, 'store']);
     Route::get('/appointments', [AppointmentController::class, 'index']);
+    // Dentro del grupo auth:sanctum
+    Route::post('/appointments/{id}/complete', [AppointmentController::class, 'complete']);
 });
 
 //

@@ -47,4 +47,31 @@ class AppointmentController extends Controller
 
         return response()->json($cita, 201);
     }
+    // Finalizar Cita (POST /api/appointments/{id}/complete)
+    public function complete(Request $request, $id)
+    {
+        $request->validate([
+            'diagnosis' => 'required|string', // Diagnóstico
+            'treatment' => 'required|string', // Tratamiento / Receta
+        ]);
+
+        // 1. Buscar la cita
+        $appointment = Appointment::findOrFail($id);
+
+        // 2. Crear el Registro Médico (Historial)
+        // Usamos el modelo MedicalRecord que ya creamos antes
+        \App\Models\MedicalRecord::create([
+            'pet_id' => $appointment->pet_id,
+            'clinic_name' => 'Mi Veterinaria', // Aquí podrías poner el nombre real del vet logueado
+            'visit_date' => now()->toDateString(),
+            'diagnosis' => $request->diagnosis,
+            'treatment' => $request->treatment,
+        ]);
+
+        // 3. Actualizar estado de la cita
+        $appointment->status = 'completed';
+        $appointment->save();
+
+        return response()->json(['message' => 'Cita finalizada correctamente']);
+    }
 }
