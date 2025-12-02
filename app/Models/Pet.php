@@ -23,12 +23,15 @@ class Pet extends Model
     ];
     
     // app/Models/Pet.php
-    public function nextAppointment(){
-             // Busca la cita en la tabla 'appointments'
+    
+    public function nextAppointment()
+    {
         return $this->hasOne(Appointment::class)
-                 ->where('date', '>=', now()) // Solo fechas futuras
-                 ->orderBy('date', 'asc');    // La más cercana
-        }
+                    ->where('date', '>=', now()->toDateString()) // Fechas futuras o hoy
+                    ->where('status', 'pending') // <--- ¡ESTA ES LA LÍNEA MÁGICA!
+                    ->orderBy('date', 'asc')
+                    ->orderBy('time', 'asc');
+    } 
     // RELACIÓN 1: Historial Médico (Una mascota tiene muchos registros)
     // El nombre de la función 'medicalHistory' DEBE coincidir con lo que pusiste en el controlador
     public function medicalHistory()
