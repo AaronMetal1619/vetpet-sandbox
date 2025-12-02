@@ -14,7 +14,7 @@ class AppointmentController extends Controller
     {
         // Traemos las citas con la Mascota y el Dueño de la mascota (Relaciones anidadas)
         // Ordenamos por fecha y hora para ver las próximas primero
-        $citas = Appointment::with(['pet.user']) // 'pet' y dentro de pet, el 'user'
+        $citas = Appointment::with(['pet.user', 'pet.medicalHistory']) // 'pet' y dentro de pet, el 'user'
                     ->where('status', '!=', 'completed') // Opcional: No mostrar las finalizadas
                     ->orderBy('date', 'asc')
                     ->orderBy('time', 'asc')
