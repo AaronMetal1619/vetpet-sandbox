@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\Storage;
 
 class PetController extends Controller
 {
-    // 1. OBTENER MASCOTAS (GET)
-    public function index()
-    {
-        // Devuelve solo las mascotas del usuario logueado
-        return Pet::where('user_id', Auth::id())->get();
+    // PetController.php
+    public function index() {
+    $pets = Pet::where('user_id', Auth::id())
+        ->with(['nextAppointment', 'medicalHistory']) // Carga "inteligente"
+        ->get();
+    return response()->json($pets);
     }
-
     // 2. GUARDAR NUEVA MASCOTA (POST)
     public function store(Request $request)
     {
