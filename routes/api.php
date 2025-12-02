@@ -12,6 +12,7 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\FirebaseAuthController;
+use App\Http\Controllers\PetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -92,6 +93,18 @@ Route::get('/auth/{provider}/callback', function ($provider) {
     } catch (\Exception $e) {
         return redirect("https://vetpetfront.onrender.com/login?error=social_login_failed");
     }
+});
+//
+// 🐾 RUTAS PARA EL CARDEX DE MASCOTAS
+Route::middleware('auth:sanctum')->group(function () {
+    
+    // ... tus otras rutas de usuario ...
+
+    // RUTAS PARA EL CARDEX DE MASCOTAS
+    Route::get('/pets', [PetController::class, 'index']);      // Ver lista
+    Route::post('/pets', [PetController::class, 'store']);     // Crear
+    Route::match(['put', 'post'], '/pets/{id}', [PetController::class, 'update']); // Actualizar (Match ayuda con el truco de form-data)
+    Route::delete('/pets/{id}', [PetController::class, 'destroy']); // Borrar
 });
 
 //
