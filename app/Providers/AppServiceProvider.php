@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Artisan; // <--- Importante
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL; // <--- ESTA ES LA LÍNEA QUE FALTA
 
 class AppServiceProvider extends ServiceProvider
 {
