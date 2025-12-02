@@ -59,3 +59,7 @@ Route::get('/run-storage-link', function () {
     Artisan::call('storage:link');
     return '¡Comando storage:link ejecutado correctamente! Ya deberías ver las imágenes.';
 });
+Route::get('/run-migrate', function () {
+    Illuminate\Support\Facades\Artisan::call('migrate --force');
+    return 'Migración ejecutada con éxito';
+});
