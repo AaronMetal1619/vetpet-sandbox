@@ -54,3 +54,8 @@ Route::get('/debug-routes', function () {
         return response()->json(['error' => $e->getMessage()], 500);
     }
 });
+Route::get('/run-storage-link', function () {
+    // Esto ejecuta el comando php artisan storage:link internamente
+    Artisan::call('storage:link');
+    return '¡Comando storage:link ejecutado correctamente! Ya deberías ver las imágenes.';
+});

@@ -34,5 +34,9 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Exception $e) {
             // Silenciar errores si ocurren durante el boot
         }
+        // Si estamos en producción (Render), forzamos HTTPS
+    if($this->app->environment('production')) {
+        URL::forceScheme('https');
+    }
     }
 }

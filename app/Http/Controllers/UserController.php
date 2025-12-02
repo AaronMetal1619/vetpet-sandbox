@@ -91,4 +91,39 @@ class UserController extends Controller
         $user->delete();
         return response()->json(['message' => 'Eliminado']);
     }
+    // Método especial para actualizar perfil con FOTO
+    public function updateProfile(Request $request, $id)
+    {
+        $user = User::find($id);
+        if (!$user) return response()->json(['message' => 'Usuario no encontrado'], 404);
+
+        // 1. Validación (Permitimos que los campos sean opcionales)
+        $request->validate([
+            'name' => 'nullable|string',
+            'email' => 'nullable|email|unique:users,email,' . $id,
+            'phone' => 'nullable|string',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validar imagen
+        ]);
+
+        // 2. Actualizar datos de texto si vienen en la petición
+        if ($request->has('name')) $user->name = $request->name;
+        if ($request->has('email')) $user->email = $request->email;
+        if ($request->has('phone')) $user->phone = $request->phone;
+
+        // 3. Lógica para la IMAGEN (Lo que faltaba)
+        if ($request->hasFile('profile_picture')) {
+            // Guardamos en la carpeta 'users' dentro de public
+            $path = $request->file('profile_picture')->store('users', 'public');
+            // Guardamos la URL completa
+            $user->profile_picture = url('storage/' . $path);
+        }
+
+        $user->save();
+
+        // 4. Retornamos la respuesta exacta que tu React espera
+        return response()->json([
+            'message' => 'Perfil actualizado correctamente',
+            'user' => $user
+        ], 200);
+    }
 }

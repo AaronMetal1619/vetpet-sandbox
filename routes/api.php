@@ -67,6 +67,8 @@ Route::middleware('auth:sanctum')->group(function () {
         $user->save();
         return response()->json(["message" => "Suscripción activada", "plan" => $request->plan]);
     });
+    // Dentro de tu grupo middleware('auth:sanctum')
+    Route::post('/update-profile/{id}', [UserController::class, 'updateProfile']);
 });
 
 //
