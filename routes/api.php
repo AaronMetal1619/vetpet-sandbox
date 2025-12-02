@@ -12,13 +12,19 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\FirebaseAuthController;
+// AQUÍ ESTABA EL CONFLICTO: He dejado ambos controladores
 use App\Http\Controllers\PetController;
+use App\Http\Controllers\ChatbotController;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
 */
+
+// Chatbot
+Route::post('/chatbot/message', [ChatbotController::class, 'handle']);
+Route::post('/chatbot/cita', [ChatbotController::class, 'createAppointment']);
 
 //
 // 🔓 RUTAS PÚBLICAS (No requieren Token)
@@ -67,7 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
         $user->save();
         return response()->json(["message" => "Suscripción activada", "plan" => $request->plan]);
     });
-    // Dentro de tu grupo middleware('auth:sanctum')
+
     Route::post('/update-profile/{id}', [UserController::class, 'updateProfile']);
 });
 
@@ -96,16 +102,16 @@ Route::get('/auth/{provider}/callback', function ($provider) {
         return redirect("https://vetpetfront.onrender.com/login?error=social_login_failed");
     }
 });
+
 //
 // 🐾 RUTAS PARA EL CARDEX DE MASCOTAS
+//
 Route::middleware('auth:sanctum')->group(function () {
     
-    // ... tus otras rutas de usuario ...
-
     // RUTAS PARA EL CARDEX DE MASCOTAS
     Route::get('/pets', [PetController::class, 'index']);      // Ver lista
     Route::post('/pets', [PetController::class, 'store']);     // Crear
-    Route::match(['put', 'post'], '/pets/{id}', [PetController::class, 'update']); // Actualizar (Match ayuda con el truco de form-data)
+    Route::match(['put', 'post'], '/pets/{id}', [PetController::class, 'update']); // Actualizar
     Route::delete('/pets/{id}', [PetController::class, 'destroy']); // Borrar
 });
 
