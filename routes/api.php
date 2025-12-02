@@ -12,6 +12,7 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\FirebaseAuthController;
+use App\Http\Controllers\AppointmentController;
 // AQUÍ ESTABA EL CONFLICTO: He dejado ambos controladores
 use App\Http\Controllers\PetController;
 use App\Http\Controllers\ChatbotController;
@@ -113,6 +114,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/pets', [PetController::class, 'store']);     // Crear
     Route::match(['put', 'post'], '/pets/{id}', [PetController::class, 'update']); // Actualizar
     Route::delete('/pets/{id}', [PetController::class, 'destroy']); // Borrar
+});
+Route::middleware('auth:sanctum')->group(function () {
+    // ... tus otras rutas ...
+    Route::post('/appointments', [AppointmentController::class, 'store']);
 });
 
 //
