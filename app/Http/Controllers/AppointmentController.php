@@ -9,6 +9,19 @@ use Illuminate\Support\Facades\Auth;
 
 class AppointmentController extends Controller
 {
+    // Listar citas para el Dashboard (GET /api/appointments)
+    public function index()
+    {
+        // Traemos las citas con la Mascota y el Dueño de la mascota (Relaciones anidadas)
+        // Ordenamos por fecha y hora para ver las próximas primero
+        $citas = Appointment::with(['pet.user']) // 'pet' y dentro de pet, el 'user'
+                    ->where('status', '!=', 'completed') // Opcional: No mostrar las finalizadas
+                    ->orderBy('date', 'asc')
+                    ->orderBy('time', 'asc')
+                    ->get();
+
+        return response()->json($citas);
+    }
     public function store(Request $request)
     {
         $request->validate([
