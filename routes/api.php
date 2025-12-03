@@ -121,6 +121,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/appointments', [AppointmentController::class, 'index']);
     // Dentro del grupo auth:sanctum
     Route::post('/appointments/{id}/complete', [AppointmentController::class, 'complete']);
+    Route::get('/available-slots', [AppointmentController::class, 'getAvailableSlots']);
 });
 
 //
