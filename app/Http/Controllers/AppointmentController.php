@@ -26,8 +26,9 @@ class AppointmentController extends Controller
     {
         $request->validate([
             'pet_id' => 'required|exists:pets,id',
+            'vet_id' => 'required|exists:users,id', // <--- FALTABA ESTA VALIDACIÓN
             'date' => 'required|date',
-            'time' => 'required', // Puedes validar formato H:i
+            'time' => 'required',
             'reason' => 'required|string',
         ]);
 
@@ -39,6 +40,7 @@ class AppointmentController extends Controller
 
         $cita = Appointment::create([
             'pet_id' => $request->pet_id,
+            'vet_id' => $request->vet_id, // <--- FALTABA GUARDAR ESTO!!!
             'date' => $request->date,
             'time' => $request->time,
             'reason' => $request->reason,
@@ -73,5 +75,39 @@ class AppointmentController extends Controller
         $appointment->save();
 
         return response()->json(['message' => 'Cita finalizada correctamente']);
+    }
+    // Obtener horarios disponibles (GET /api/available-slots)
+    public function getAvailableSlots(Request $request)
+    {
+        $request->validate([
+            'vet_id' => 'required|exists:users,id',
+            'date' => 'required|date',
+        ]);
+
+        $vet = \App\Models\User::find($request->vet_id);
+        $date = $request->date;
+
+        // 1. Definir rango
+        $start = \Carbon\Carbon::parse($vet->opening_time ?? '09:00');
+        $end = \Carbon\Carbon::parse($vet->closing_time ?? '16:00');
+
+        // 2. Generar slots
+        $allSlots = [];
+        while ($start < $end) {
+            $allSlots[] = $start->format('H:i:00');
+            $start->addHour();
+        }
+
+        // 3. Buscar ocupados (CORREGIDO Y LIMPIO)
+        $bookedSlots = Appointment::where('vet_id', $request->vet_id) // Filtramos directo por veterinario
+                        ->where('date', $date)
+                        ->where('status', '!=', 'cancelled')
+                        ->pluck('time')
+                        ->toArray();
+
+        // 4. Calcular disponibles
+        $availableSlots = array_values(array_diff($allSlots, $bookedSlots));
+
+        return response()->json($availableSlots);
     }
 }
