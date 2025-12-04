@@ -14,12 +14,13 @@ class SupersetController extends Controller
         $supersetUrl = rtrim(config('services.superset.url', 'https://4169f60d.us1a.app.preset.io'), '/');
         $dashboardId = config('services.superset.dashboard_id');
         
-        // --- CORRECCIÓN FINAL: USAMOS LA URL COMPLETA ---
-        // Preset necesita que el Referer sea una URL válida (con https://)
-        // Luego ellos internamente extraen el dominio para validarlo.
-        $frontendUrl = config('services.superset.frontend_url'); 
+        // --- CORRECCIÓN DEFINITIVA ---
+        // 1. Obtenemos la URL completa (https://...)
+        $rawFrontendUrl = config('services.superset.frontend_url'); 
         
-        // Por seguridad, asegurémonos de que no tenga barra al final
+        // 2. LE QUITAMOS EL HTTPS. 
+        // Como en tu Preset tienes "vetpetfront.onrender.com", debemos enviar exactamente eso.
+        $frontendUrl = str_replace(['https://', 'http://'], '', $rawFrontendUrl);
         $frontendUrl = rtrim($frontendUrl, '/');
         // ------------------------------------------------
 
@@ -27,8 +28,8 @@ class SupersetController extends Controller
         $apiSecret = config('services.superset.preset_api_secret');
 
         Log::info("🌍 MODALIDAD: $driver");
-        Log::info("🔗 URL PRESET: $supersetUrl");
-        Log::info("🔗 REFERER ENVIADO: $frontendUrl"); // <--- Debe salir https://vetpetfront.onrender.com
+        // ESTO ES LO IMPORTANTE: En los logs debe salir sin https://
+        Log::info("🔗 REFERER LIMPIO A ENVIAR: $frontendUrl"); 
 
         try {
             $accessToken = null;
@@ -56,7 +57,7 @@ class SupersetController extends Controller
             // === OBTENER GUEST TOKEN ===
             $guestTokenResponse = Http::withToken($accessToken)
                 ->withHeaders([
-                    'Referer' => $frontendUrl, // Enviamos https://vetpetfront.onrender.com
+                    'Referer' => $frontendUrl, // Enviamos "vetpetfront.onrender.com"
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json'
                 ])
