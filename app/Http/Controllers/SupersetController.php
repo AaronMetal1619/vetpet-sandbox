@@ -10,26 +10,21 @@ class SupersetController extends Controller
 {
     public function getGuestToken()
     {
+        // Configuración básica
         $driver = config('services.superset.driver', 'local');
         $supersetUrl = rtrim(config('services.superset.url', 'https://4169f60d.us1a.app.preset.io'), '/');
         $dashboardId = config('services.superset.dashboard_id');
-        
-        // --- CORRECCIÓN DEFINITIVA ---
-        // 1. Obtenemos la URL completa (https://...)
-        $rawFrontendUrl = config('services.superset.frontend_url'); 
-        
-        // 2. LE QUITAMOS EL HTTPS. 
-        // Como en tu Preset tienes "vetpetfront.onrender.com", debemos enviar exactamente eso.
-        $frontendUrl = str_replace(['https://', 'http://'], '', $rawFrontendUrl);
-        $frontendUrl = rtrim($frontendUrl, '/');
-        // ------------------------------------------------
-
         $apiKey = config('services.superset.preset_api_key');
         $apiSecret = config('services.superset.preset_api_secret');
 
-        Log::info("🌍 MODALIDAD: $driver");
-        // ESTO ES LO IMPORTANTE: En los logs debe salir sin https://
-        Log::info("🔗 REFERER LIMPIO A ENVIAR: $frontendUrl"); 
+        // --- SOLUCIÓN A PRUEBA DE BALAS ---
+        // Escribimos la URL manualmente para asegurar que sea EXACTA a la de Preset
+        // Debe coincidir letra por letra con "Allowed Domains"
+        $refererFijo = 'https://vetpetfront.onrender.com';
+        // ----------------------------------
+
+        Log::info("🌍 MODO: $driver");
+        Log::info("🔗 INTENTANDO AUTH CON REFERER: $refererFijo");
 
         try {
             $accessToken = null;
@@ -50,14 +45,13 @@ class SupersetController extends Controller
 
                 $accessToken = $response->json()['payload']['access_token'];
             } else {
-                // Modo local
-                $accessToken = '...'; 
+                $accessToken = '...'; // Modo local
             }
 
-            // === OBTENER GUEST TOKEN ===
+            // === PETICIÓN DEL GUEST TOKEN ===
             $guestTokenResponse = Http::withToken($accessToken)
                 ->withHeaders([
-                    'Referer' => $frontendUrl, // Enviamos "vetpetfront.onrender.com"
+                    'Referer' => $refererFijo, // Enviamos el valor fijo con HTTPS
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json'
                 ])
@@ -75,8 +69,9 @@ class SupersetController extends Controller
                 ]);
 
             if ($guestTokenResponse->failed()) {
-                Log::error("❌ Preset Error Body: " . $guestTokenResponse->body());
-                throw new \Exception("Fallo Guest Token: " . $guestTokenResponse->body());
+                // Logueamos el error completo para verlo en Render
+                Log::error("❌ ERROR PRESET: " . $guestTokenResponse->body());
+                throw new \Exception("Fallo Guest Token. Verifica que '$refererFijo' esté en Allowed Domains.");
             }
 
             return response()->json([
@@ -86,7 +81,7 @@ class SupersetController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error("❌ ERROR SUPERSET: " . $e->getMessage());
+            Log::error("❌ EXCEPCIÓN: " . $e->getMessage());
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
