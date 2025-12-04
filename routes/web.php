@@ -63,3 +63,13 @@ Route::get('/run-migrate', function () {
     Illuminate\Support\Facades\Artisan::call('migrate --force');
     return 'Migración ejecutada con éxito';
 });
+Route::get('/clear-cache', function () {
+    try {
+        Artisan::call('config:clear');
+        Artisan::call('cache:clear');
+        Artisan::call('config:cache'); // Reconstruye la caché con los datos nuevos
+        return "<h1>¡Caché limpiada y configuración reconstruida!</h1>";
+    } catch (\Exception $e) {
+        return "Error: " . $e->getMessage();
+    }
+});
