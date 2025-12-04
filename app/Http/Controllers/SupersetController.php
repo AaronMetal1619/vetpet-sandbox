@@ -10,14 +10,22 @@ class SupersetController extends Controller
 {
     public function getGuestToken()
     {
-        // 1. USAMOS config() EN LUGAR DE env() (VITAL PARA RENDER)
+        
         $driver = config('services.superset.driver', 'local');
         $supersetUrl = rtrim(config('services.superset.url', 'https://4169f60d.us1a.app.preset.io'), '/');
         $dashboardId = config('services.superset.dashboard_id');
-        $frontendUrl = config('services.superset.frontend_url'); 
+        
+        // --- CORRECCIÓN AQUÍ ---
+        // Obtenemos la URL del .env
+        $rawFrontendUrl = config('services.superset.frontend_url'); 
+        
+        // Le quitamos 'https://' y 'http://' para dejar solo el dominio 'vetpetfront.onrender.com'
+        // Esto es para que coincida EXACTAMENTE con lo que pusiste en la lista blanca de Preset.
+        $frontendUrl = str_replace(['https://', 'http://'], '', $rawFrontendUrl); 
+        // -----------------------
 
-        // Credenciales desde la configuración
         $apiKey = config('services.superset.preset_api_key');
+        // ... resto del código ...
         $apiSecret = config('services.superset.preset_api_secret');
 
         Log::info("\n🌍 --- GENERANDO TOKEN MODO: " . strtoupper($driver) . " ---");
