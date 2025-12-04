@@ -16,12 +16,16 @@ use App\Http\Controllers\AppointmentController;
 // AQUÍ ESTABA EL CONFLICTO: He dejado ambos controladores
 use App\Http\Controllers\PetController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\SupersetController;
+use Firebase\JWT\JWT;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
 */
+// Esta línea crea la ruta: http://localhost:8000/api/preset-token
+Route::get('/preset-token', [SupersetController::class, 'getGuestToken']);
 
 // Chatbot
 Route::post('/chatbot/message', [ChatbotController::class, 'handle']);
@@ -35,10 +39,10 @@ Route::post('/register', [AuthController::class, 'register']);
 
 // Productos y Citas (Crear) visibles para todos
 Route::get('/productos', [ProductoController::class, 'index']);
-Route::post('/citas', [CitaController::class, 'store']); 
+Route::post('/citas', [CitaController::class, 'store']);
 
 // 🔥 CRUCIAL: Lista de usuarios pública para que n8n pueda leer las veterinarias
-Route::get('/users', [UserController::class, 'index']); 
+Route::get('/users', [UserController::class, 'index']);
 
 
 //
@@ -65,7 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/productos', [ProductoController::class, 'store']);
     Route::put('/productos/{id}', [ProductoController::class, 'update']);
     Route::delete('/productos/{id}', [ProductoController::class, 'destroy']);
-    
+
     // --- SUSCRIPCIÓN FALSA (TESTING) ---
     Route::post('/fake-subscribe', function (Request $request) {
         $user = auth()->user();
@@ -108,7 +112,7 @@ Route::get('/auth/{provider}/callback', function ($provider) {
 // 🐾 RUTAS PARA EL CARDEX DE MASCOTAS
 //
 Route::middleware('auth:sanctum')->group(function () {
-    
+
     // RUTAS PARA EL CARDEX DE MASCOTAS
     Route::get('/pets', [PetController::class, 'index']);      // Ver lista
     Route::post('/pets', [PetController::class, 'store']);     // Crear

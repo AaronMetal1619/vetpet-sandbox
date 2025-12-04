@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   backend:
     build:
@@ -7,9 +5,10 @@ services:
       dockerfile: Dockerfile
     container_name: laravel_app
     ports:
-      - "8000:80"
+      - "8000:8088"
     volumes:
-      - ./:/var/www/html
+      - ./storage:/var/www/html/storage
+      - ./public:/var/www/html/public
     environment:
       APACHE_DOCUMENT_ROOT: /var/www/html/public
     depends_on:
@@ -31,7 +30,7 @@ services:
   frontend:
     build:
       context: ../vetpet-main-front     # ruta hacia tu front
-      dockerfile: Dockerfile            # Dockerfile del front
+      dockerfile: Dockerfile
     container_name: react_app
     ports:
       - "3000:80"
@@ -39,6 +38,24 @@ services:
       - ../vetpet-main-front:/app
     depends_on:
       - backend
+
+  superset:
+    image: apache/superset:latest
+    container_name: superset_app
+    ports:
+      - "8088:8088"                     # expone Superset
+    volumes:
+      - ./superset_config.py:/app/pythonpath/superset_config.py
+    environment:
+      SUPERSET_ENV: "production"
+    command: >
+      /bin/bash -c "
+      superset db upgrade &&
+      superset init &&
+      superset run -p 8088 --with-threads --reload --debugger
+      "
+    depends_on:
+      - db
 
 volumes:
   dbdata:
