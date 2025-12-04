@@ -10,12 +10,14 @@ class SupersetController extends Controller
 {
     public function getGuestToken()
     {
-        // Leemos si estamos en modo 'preset' o 'local' desde el .env
+        // 1. Configuración Inicial
         $driver = env('SUPERSET_DRIVER', 'local');
-
-        // Leemos la URL y el ID del dashboard
-        $supersetUrl = env('SUPERSET_URL', 'https://4169f60d.us1a.app.preset.io');
+        // Aseguramos que no haya barras al final de la URL
+        $supersetUrl = rtrim(env('SUPERSET_URL', 'https://4169f60d.us1a.app.preset.io'), '/');
         $dashboardId = env('SUPERSET_DASHBOARD_ID');
+
+        // CRUCIAL: Esta URL debe coincidir con la lista "Allowed Domains" en Preset
+        $frontendUrl = env('FRONTEND_URL', 'https://vetpetfront.onrender.com');
 
         Log::info("\n🌍 --- GENERANDO TOKEN MODO: " . strtoupper($driver) . " ---");
 
@@ -24,7 +26,7 @@ class SupersetController extends Controller
 
             // === ESCENARIO 1: MODO PRESET (PRODUCCIÓN / RENDER) ===
             if ($driver === 'preset') {
-                // Preset requiere autenticación con API Key y Secret primero
+                // Preset requiere autenticación con API Key y Secret
                 $response = Http::post('https://api.app.preset.io/v1/auth/', [
                     'name' => env('PRESET_API_KEY'),
                     'secret' => env('PRESET_API_SECRET'),
@@ -55,35 +57,50 @@ class SupersetController extends Controller
                 Log::info("✅ Auth Local OK.");
             }
 
-            // === PASO COMÚN: PEDIR EL GUEST TOKEN ===
-            Log::info("🎫 Solicitando Guest Token...");
+            // === PASO COMÚN: PEDIR EL GUEST TOKEN (AQUÍ ESTABA EL ERROR) ===
+            Log::info("🎫 Solicitando Guest Token para Dashboard ID: $dashboardId");
 
-            $guestTokenResponse = Http::withToken($accessToken)->post("$supersetUrl/api/v1/security/guest_token/", [
-                'user' => [
-                    'username' => 'guest',
-                    'first_name' => 'Visitante',
-                    'last_name' => 'Web',
-                ],
-                'resources' => [[
-                    'type' => 'dashboard',
-                    'id'   => $dashboardId,
-                ]],
-                'rls' => [],
-            ]);
+            // Solicitud corregida con Header REFERER
+            $guestTokenResponse = Http::withToken($accessToken)
+                ->withHeaders([
+                    // ESTO ES LO QUE FALTABA: Preset exige saber quién pide el token
+                    'Referer' => $frontendUrl,
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json'
+                ])
+                ->post("$supersetUrl/api/v1/security/guest_token/", [
+                    'user' => [
+                        'username' => 'guest',
+                        'first_name' => 'Visitante',
+                        'last_name' => 'Web',
+                    ],
+                    'resources' => [[
+                        'type' => 'dashboard',
+                        'id'   => $dashboardId,
+                    ]],
+                    'rls' => [], // Row Level Security (vacío si no se usa)
+                ]);
 
             if ($guestTokenResponse->failed()) {
+                // Logueamos el error exacto que devuelve Preset (ej. Referer missing)
+                Log::error("❌ Preset rechazó el Guest Token: " . $guestTokenResponse->body());
                 throw new \Exception("Fallo Guest Token: " . $guestTokenResponse->body());
             }
 
             // Enviamos al Frontend todo lo que necesita
             return response()->json([
                 'token' => $guestTokenResponse->json()['token'],
-                'supersetDomain' => $supersetUrl, // Así React sabe si conectar a Preset o Localhost
+                'supersetDomain' => $supersetUrl,
                 'dashboardId' => $dashboardId
             ]);
         } catch (\Exception $e) {
-            Log::error("❌ ERROR SUPERSET: " . $e->getMessage());
-            return response()->json(['error' => $e->getMessage()], 500);
+            Log::error("❌ ERROR CRÍTICO SUPERSET: " . $e->getMessage());
+
+            // Devolvemos el error detallado para verlo en la consola del navegador (Network Tab)
+            return response()->json([
+                'error' => 'Error obteniendo token de visualización',
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
 }
