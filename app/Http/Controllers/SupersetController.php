@@ -14,7 +14,7 @@ class SupersetController extends Controller
         $driver = env('SUPERSET_DRIVER', 'local');
 
         // Leemos la URL y el ID del dashboard
-        $supersetUrl = env('SUPERSET_URL', 'http://localhost:8088');
+        $supersetUrl = env('SUPERSET_URL', 'https://4169f60d.us1a.app.preset.io');
         $dashboardId = env('SUPERSET_DASHBOARD_ID');
 
         Log::info("\n🌍 --- GENERANDO TOKEN MODO: " . strtoupper($driver) . " ---");
