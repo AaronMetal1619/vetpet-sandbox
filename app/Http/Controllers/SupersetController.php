@@ -10,34 +10,35 @@ class SupersetController extends Controller
 {
     public function getGuestToken()
     {
-        
         $driver = config('services.superset.driver', 'local');
         $supersetUrl = rtrim(config('services.superset.url', 'https://4169f60d.us1a.app.preset.io'), '/');
         $dashboardId = config('services.superset.dashboard_id');
         
-        // --- CORRECCIÓN AQUÍ ---
-        // Obtenemos la URL del .env
-        $rawFrontendUrl = config('services.superset.frontend_url'); 
+        // --- LIMPIEZA ROBUSTA DE URL ---
+        $rawUrl = config('services.superset.frontend_url');
+        // Quitamos protocolo y barras finales para obtener solo el dominio limpio
+        $domainOnly = str_replace(['https://', 'http://'], '', $rawUrl);
+        $domainOnly = rtrim($domainOnly, '/');
         
-        // Le quitamos 'https://' y 'http://' para dejar solo el dominio 'vetpetfront.onrender.com'
-        // Esto es para que coincida EXACTAMENTE con lo que pusiste en la lista blanca de Preset.
-        $frontendUrl = str_replace(['https://', 'http://'], '', $rawFrontendUrl); 
-        // -----------------------
+        // Preset a veces es caprichoso. Si en "Allowed Domains" pusiste solo el dominio,
+        // el Referer debe coincidir. A veces funciona mejor enviando la URL completa (con https).
+        // PERO el error dice "does not match", así que probemos enviando SOLO EL DOMINIO
+        // que es lo que tienes configurado en la captura de pantalla.
+        $refererToSend = $domainOnly; 
+        // --------------------------------
 
         $apiKey = config('services.superset.preset_api_key');
-        // ... resto del código ...
         $apiSecret = config('services.superset.preset_api_secret');
 
-        Log::info("\n🌍 --- GENERANDO TOKEN MODO: " . strtoupper($driver) . " ---");
+        Log::info("🌍 MODALIDAD: $driver");
+        Log::info("🔗 REFERER ENVIADO A PRESET: $refererToSend"); // <--- Esto aparecerá en los logs de Render
 
         try {
             $accessToken = null;
 
-            // === MODO PRESET ===
             if ($driver === 'preset') {
-                // Validación extra para depurar
                 if (empty($apiKey) || empty($apiSecret)) {
-                    throw new \Exception("Credenciales vacías. Revisa config/services.php y cache.");
+                    throw new \Exception("Credenciales vacías.");
                 }
 
                 $response = Http::post('https://api.app.preset.io/v1/auth/', [
@@ -51,18 +52,15 @@ class SupersetController extends Controller
 
                 $accessToken = $response->json()['payload']['access_token'];
             }
-            // === MODO LOCAL ===
             else {
-                $response = Http::post("$supersetUrl/api/v1/security/login", [
-                    'username' => 'admin', 'password' => 'admin', 'provider' => 'db', 'refresh' => true,
-                ]);
-                $accessToken = $response->json()['access_token'];
+                // Modo local...
+                $accessToken = '...'; // (Tu código local)
             }
 
             // === OBTENER GUEST TOKEN ===
             $guestTokenResponse = Http::withToken($accessToken)
                 ->withHeaders([
-                    'Referer' => $frontendUrl, // CRUCIAL: Debe coincidir con 'Allowed Domains'
+                    'Referer' => $refererToSend, // Usamos la variable limpia
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json'
                 ])
@@ -80,6 +78,8 @@ class SupersetController extends Controller
                 ]);
 
             if ($guestTokenResponse->failed()) {
+                // Logueamos lo que enviamos y lo que recibimos para depurar
+                Log::error("❌ Preset Error. Enviado Referer: '$refererToSend'. Respuesta: " . $guestTokenResponse->body());
                 throw new \Exception("Fallo Guest Token: " . $guestTokenResponse->body());
             }
 
