@@ -10,20 +10,26 @@ class SupersetController extends Controller
 {
     public function getGuestToken()
     {
+        // Configuración
         $driver = config('services.superset.driver', 'local');
         $supersetUrl = rtrim(config('services.superset.url', 'https://4169f60d.us1a.app.preset.io'), '/');
         $dashboardId = config('services.superset.dashboard_id');
-        
-        // Credenciales
         $apiKey = config('services.superset.preset_api_key');
         $apiSecret = config('services.superset.preset_api_secret');
 
-        Log::info("🌍 MODALIDAD: $driver");
+        // --- CUMPLIENDO LA DOCUMENTACIÓN ---
+        // La doc dice: "Asegúrese de incluir el protocolo (https://)"
+        // Ponemos la URL exacta que pusiste en Preset.
+        $refererSeguro = 'https://vetpetfront.onrender.com';
+        // -----------------------------------
+
+        Log::info("🌍 MODO: $driver");
+        Log::info("🔗 REFERER ENVIADO: $refererSeguro");
 
         try {
             $accessToken = null;
 
-            // 1. AUTENTICACIÓN (Obtener Token de Admin)
+            // 1. AUTENTICACIÓN
             if ($driver === 'preset') {
                 if (empty($apiKey) || empty($apiSecret)) {
                     throw new \Exception("Credenciales vacías.");
@@ -40,14 +46,15 @@ class SupersetController extends Controller
 
                 $accessToken = $response->json()['payload']['access_token'];
             } else {
-                // Modo local
                 $accessToken = '...'; 
             }
 
             // 2. OBTENER GUEST TOKEN
-            // ⚠️ QUITAMOS EL HEADER 'Referer'. Preset API no lo necesita aquí.
+            // La documentación dice que el backend solicita el token.
+            // El header 'Referer' es crucial aquí.
             $guestTokenResponse = Http::withToken($accessToken)
                 ->withHeaders([
+                    'Referer' => $refererSeguro, // Enviamos con HTTPS
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json'
                 ])
@@ -65,7 +72,7 @@ class SupersetController extends Controller
                 ]);
 
             if ($guestTokenResponse->failed()) {
-                Log::error("❌ Preset Error Body: " . $guestTokenResponse->body());
+                Log::error("❌ Preset Error: " . $guestTokenResponse->body());
                 throw new \Exception("Fallo Guest Token: " . $guestTokenResponse->body());
             }
 
@@ -76,7 +83,7 @@ class SupersetController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error("❌ ERROR SUPERSET: " . $e->getMessage());
+            Log::error("❌ EXCEPCIÓN: " . $e->getMessage());
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
