@@ -126,6 +126,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Dentro del grupo auth:sanctum
     Route::post('/appointments/{id}/complete', [AppointmentController::class, 'complete']);
     Route::get('/available-slots', [AppointmentController::class, 'getAvailableSlots']);
+    Route::get('/preset-token', [SupersetController::class, 'getGuestToken']);
 });
 
 //

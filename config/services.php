@@ -41,7 +41,16 @@ return [
     'client_secret' => env('GOOGLE_CLIENT_SECRET'),
     'redirect' => env('GOOGLE_REDIRECT_URL'),
     ],
-
+    
+    // ✅ AGREGA ESTO AL FINAL DEL ARRAY:
+    'superset' => [
+        'driver' => env('SUPERSET_DRIVER', 'preset'),
+        'url' => env('SUPERSET_URL'),
+        'dashboard_id' => env('SUPERSET_DASHBOARD_ID'),
+        'preset_api_key' => env('PRESET_API_KEY'),
+        'preset_api_secret' => env('PRESET_API_SECRET'),
+        'frontend_url' => env('FRONTEND_URL', 'https://vetpetfront.onrender.com'),
+    ],
 
 
 ];
