@@ -10,8 +10,10 @@ class SupersetController extends Controller
 {
     public function getGuestToken()
     {
-        // 1. Leemos las variables del .env (sirve para local y render)
-        $driver = env('SUPERSET_DRIVER', 'local'); // 'local' o 'preset'
+        // Leemos si estamos en modo 'preset' o 'local' desde el .env
+        $driver = env('SUPERSET_DRIVER', 'local');
+
+        // Leemos la URL y el ID del dashboard
         $supersetUrl = env('SUPERSET_URL', 'http://localhost:8088');
         $dashboardId = env('SUPERSET_DASHBOARD_ID');
 
@@ -20,38 +22,42 @@ class SupersetController extends Controller
         try {
             $accessToken = null;
 
-            // === CASO A: MODO PRESET (PRODUCCIÓN) ===
+            // === ESCENARIO 1: MODO PRESET (PRODUCCIÓN / RENDER) ===
             if ($driver === 'preset') {
-                // En Preset, primero nos autenticamos contra su API global para obtener el token JWT
+                // Preset requiere autenticación con API Key y Secret primero
                 $response = Http::post('https://api.app.preset.io/v1/auth/', [
                     'name' => env('PRESET_API_KEY'),
                     'secret' => env('PRESET_API_SECRET'),
                 ]);
 
-                if ($response->failed()) throw new \Exception("Fallo Auth Preset: " . $response->body());
-                $accessToken = $response->json()['payload']['access_token'];
+                if ($response->failed()) {
+                    throw new \Exception("Fallo Auth Preset: " . $response->body());
+                }
 
+                $accessToken = $response->json()['payload']['access_token'];
                 Log::info("✅ Auth Preset OK.");
             }
 
-            // === CASO B: MODO LOCAL (DOCKER) ===
+            // === ESCENARIO 2: MODO LOCAL (DOCKER) ===
             else {
                 $response = Http::post("$supersetUrl/api/v1/security/login", [
-                    'username' => env('SUPERSET_USERNAME', 'admin'),
-                    'password' => env('SUPERSET_PASSWORD', 'admin'),
+                    'username' => 'admin',
+                    'password' => 'admin',
                     'provider' => 'db',
                     'refresh'  => true,
                 ]);
 
-                if ($response->failed()) throw new \Exception("Fallo Auth Local: " . $response->body());
+                if ($response->failed()) {
+                    throw new \Exception("Fallo Auth Local: " . $response->body());
+                }
+
                 $accessToken = $response->json()['access_token'];
                 Log::info("✅ Auth Local OK.");
             }
 
-            // === 2. OBTENER EL GUEST TOKEN (Igual para ambos, solo cambia la URL base) ===
-            Log::info("🎫 Solicitando Guest Token para Dashboard: $dashboardId");
+            // === PASO COMÚN: PEDIR EL GUEST TOKEN ===
+            Log::info("🎫 Solicitando Guest Token...");
 
-            // Nota: En Preset la URL suele ser /v1/security/guest_token/, igual que en Superset
             $guestTokenResponse = Http::withToken($accessToken)->post("$supersetUrl/api/v1/security/guest_token/", [
                 'user' => [
                     'username' => 'guest',
@@ -69,10 +75,10 @@ class SupersetController extends Controller
                 throw new \Exception("Fallo Guest Token: " . $guestTokenResponse->body());
             }
 
+            // Enviamos al Frontend todo lo que necesita
             return response()->json([
                 'token' => $guestTokenResponse->json()['token'],
-                // Enviamos también estos datos al front para que no estén hardcodeados en React
-                'supersetDomain' => $supersetUrl,
+                'supersetDomain' => $supersetUrl, // Así React sabe si conectar a Preset o Localhost
                 'dashboardId' => $dashboardId
             ]);
         } catch (\Exception $e) {
