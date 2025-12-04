@@ -10,13 +10,13 @@ class SupersetController extends Controller
 {
     public function getGuestToken()
     {
-        // 1. Usamos config() en lugar de env() para producción
+        // 1. USAMOS config() EN LUGAR DE env() (VITAL PARA RENDER)
         $driver = config('services.superset.driver', 'local');
         $supersetUrl = rtrim(config('services.superset.url', 'https://4169f60d.us1a.app.preset.io'), '/');
         $dashboardId = config('services.superset.dashboard_id');
-        $frontendUrl = config('services.superset.frontend_url'); // Importante para el Referer
+        $frontendUrl = config('services.superset.frontend_url'); 
 
-        // Credenciales
+        // Credenciales desde la configuración
         $apiKey = config('services.superset.preset_api_key');
         $apiSecret = config('services.superset.preset_api_secret');
 
@@ -25,10 +25,11 @@ class SupersetController extends Controller
         try {
             $accessToken = null;
 
-            // === ESCENARIO 1: MODO PRESET (PRODUCCIÓN / RENDER) ===
+            // === MODO PRESET ===
             if ($driver === 'preset') {
-                if (!$apiKey || !$apiSecret) {
-                    throw new \Exception("Faltan las credenciales de Preset en las variables de entorno.");
+                // Validación extra para depurar
+                if (empty($apiKey) || empty($apiSecret)) {
+                    throw new \Exception("Credenciales vacías. Revisa config/services.php y cache.");
                 }
 
                 $response = Http::post('https://api.app.preset.io/v1/auth/', [
@@ -41,23 +42,19 @@ class SupersetController extends Controller
                 }
 
                 $accessToken = $response->json()['payload']['access_token'];
-                Log::info("✅ Auth Preset OK.");
             }
-            // === ESCENARIO 2: MODO LOCAL ===
+            // === MODO LOCAL ===
             else {
-                // ... (Tu código local sigue igual)
                 $response = Http::post("$supersetUrl/api/v1/security/login", [
                     'username' => 'admin', 'password' => 'admin', 'provider' => 'db', 'refresh' => true,
                 ]);
                 $accessToken = $response->json()['access_token'];
             }
 
-            // === SOLICITAR GUEST TOKEN ===
-            Log::info("🎫 Solicitando Guest Token para Dashboard ID: $dashboardId");
-
+            // === OBTENER GUEST TOKEN ===
             $guestTokenResponse = Http::withToken($accessToken)
                 ->withHeaders([
-                    'Referer' => $frontendUrl, // CRUCIAL
+                    'Referer' => $frontendUrl, // CRUCIAL: Debe coincidir con 'Allowed Domains'
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json'
                 ])
@@ -75,8 +72,7 @@ class SupersetController extends Controller
                 ]);
 
             if ($guestTokenResponse->failed()) {
-                Log::error("❌ Preset rechazó el Guest Token: " . $guestTokenResponse->body());
-                throw new \Exception("Fallo Guest Token. Verifica 'Allowed Domains' en Preset. Respuesta: " . $guestTokenResponse->body());
+                throw new \Exception("Fallo Guest Token: " . $guestTokenResponse->body());
             }
 
             return response()->json([
@@ -86,8 +82,8 @@ class SupersetController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error("❌ ERROR CRÍTICO SUPERSET: " . $e->getMessage());
-            return response()->json(['error' => 'Error backend', 'details' => $e->getMessage()], 500);
+            Log::error("❌ ERROR SUPERSET: " . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 }
